@@ -1,0 +1,37 @@
+---
+title: "Export Bubble Apps to Code With Burst"
+slug: "export-your-bubble-apps-to-code"
+summary: "The industry first tool for converting Bubble applications to traditional code."
+ 
+time:
+  created: "2024-02-22T14:11:11.816Z"
+ 
+seo:
+  title: "Export Bubble Apps to Code With Burst"
+  description: "The industry first tool for converting Bubble applications to traditional code"
+  keywords: ["Bubble to code", "Convert Bubble apps to code", "Export code from Bubble"]
+ 
+audience:
+  views: 300
+---
+
+> 🔔 This project is still very early and still progressing. Look through my blog posts for updates.
+
+Almost two weeks ago, I decided to see if there was some possible way to export your Bubble app so I dug through articles and Bubble forum posts and sure enough there wasn’t any. I did get a ton of helpful information into how Bubble is built though and that helped kickstart this whole thing.
+
+The primary thing I was interested in was Bubble’s JSONBase which is a pretty smart way they decided to save details of applications so they are able to use whatever coding language they wanted to build out the actual thing. Up until last week I didn’t even know you could export your app as JSON. I was reading through the network tab like a crazy person trying to figure out their weird naming convention. Anyway, I eventually found out you could just get the actual thing if you have a paid app.
+
+The next part was understanding the JSON structure and how I could convert every single detail to properly formatted code. Long story short, I figured it out or more accurately, I’m still figuring it out.
+
+I’m focusing first on the frontend part of the apps and taking it element by element. I’m also starting the conversion with regular html and css which would make the option for other frameworks like React easy.
+
+I’m calling it **Burst** and it is an entirely experimental project. I won’t explain the name so I don’t realize how unfunny it is but if you do get the joke then congratulations, we’re both on the same dry comical level :)
+
+So far Burst supports code conversion of Texts, Groups and Buttons inside a Page. It has some limitations in how it handles some element properties which I will outline in another update. An example is that it only supports solid background and border styles for now.
+
+Like I said this is totally experimental and at anytime it could flop or I could hit a giant blocker but either way it has been a fun challenge. I’ll post updates on my blog and possibly a GitHub repo if it seems like there’ll be an interest in the community helping out.
+
+Here’s a demo:
+
+<PostVideo videoUrl="https://www.loom.com/share/9fe7c1eeedfc4d4eb506454ca1ef7460?sid=628978f1-248e-470d-9071-9c04ab850d92"
+/>

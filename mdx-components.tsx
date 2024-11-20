@@ -7,6 +7,7 @@ import FootnoteForwardReference from "@/components/footnote/forward-reference";
 import MDXImage from "@/components/image";
 import Link from "@/components/link";
 import Preview from "@/components/preview";
+import {PostVideo} from "@/components/video-embed";
 import { cn } from "@/lib/cn";
 
 import { MDXRemote } from "next-mdx-remote/rsc";
@@ -16,6 +17,7 @@ import rehypeSlug from "rehype-slug";
 import remarkGfm from "remark-gfm";
 
 const components: MDXComponents = {
+  PostVideo,
   PreviewExample: () => {
     return (
       <div className="min- flex h-10 w-32 items-center justify-center rounded-lg border border-yellow-6 bg-yellow-3 text-yellow-11">

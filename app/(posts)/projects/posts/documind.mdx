@@ -1,0 +1,122 @@
+---
+title: "Documind"
+slug: "documind"
+tags: ["Open-source", "AI", "LLMs"]
+summary: "Turn unstructured files into usable data with AI"
+ 
+time:
+  created: "2024-11-10T14:11:11.816Z"
+ 
+seo:
+  title: "Documind"
+  description: "Turn unstructured files into usable data with AI"
+
+audience:
+  views: 23
+
+project:
+  type: NPM Package
+  status: Active
+---
+
+<Image src='/images/documind-screenshot.png' alt='' caption=''/>
+
+# Quick Links
+- [Website](https://documind.xyz)
+- [GitHub](https://github.com/DocumindHQ/documind)
+- [NPM](https://www.npmjs.com/package/documind)
+- [Demo](https://documind.xyz/demo)
+
+# Tech Stack
+`Typescript`, `Javascript`, `Supabase`, `OpenAI`
+
+# Key Features
+
+- Converts PDFs to images for detailed AI processing.
+- Uses AI to extract and structure information.
+- Allows users to specify extraction schemas for various document formats.
+- Designed for flexible deployment on local or cloud environments.
+
+# Featured Snippets
+
+
+## Dynamic Schema Generation
+
+Documind simplifies extracting and validating data from documents by dynamically generating schemas. This feature ensures structured data extraction, reducing errors and speeding up workflows.
+
+Here’s what this feature does:
+
+- **Flexible Schema Creation**: Converts field definitions into a Zod schema for validating document fields dynamically.
+- **Supports Multiple Data Types**: Handles strings, numbers, booleans, arrays, objects, and enums, making it versatile for various document structures.
+- **Custom Descriptions**: Each field can include a description for better readability and documentation.
+
+```javascript 
+import { z } from 'zod';
+
+/**
+ * Converts an array of type definitions into a Zod schema.
+ * @param {Array} object - Array of field definitions.
+ * @returns {ZodObject} - A Zod object schema.
+ */
+export const convertToZodSchema = (object) => {
+  const createZodSchema = (obj) => {
+    const schema = {};
+
+    obj.forEach((item) => {
+      let zodType;
+      switch (item.type) {
+        case 'string':
+          zodType = z.string();
+          break;
+        case 'number':
+          zodType = z.number();
+          break;
+        case 'boolean':
+          zodType = z.boolean();
+          break;
+        case 'array':
+          if (item.children && item.children.length > 0) {
+            const arraySchema = createZodSchema(item.children);
+            zodType = z.array(z.object(arraySchema));
+          } else {
+            throw new Error(`Invalid or unsupported "array" type definition for ${item.name}`);
+          }
+          break;
+        case 'object':
+          if (item.children) {
+            zodType = z.object(createZodSchema(item.children));
+          } else {
+            throw new Error(`Invalid "object" type definition for ${item.name}`);
+          }
+          break;
+        case 'enum':
+          if (item.values && Array.isArray(item.values)) {
+            zodType = z.enum(item.values);
+          } else {
+            throw new Error(`Invalid "enum" type definition for ${item.name}`);
+          }
+          break;
+        default:
+          throw new Error(`Unsupported type "${item.type}" for field ${item.name}`);
+      }
+
+      if (item.description) {
+        zodType = zodType.describe(item.description);
+      }
+
+      schema[item.name] = zodType;
+    });
+
+    return schema;
+  };
+
+  return z.object(createZodSchema(object));
+};
+```
+### Why It’s Useful
+
+Documents come in all shapes and sizes, and validating their data can be tricky. This:
+
+- Dynamically adapts to any document structure, no matter how complex.
+- Ensures extracted data is valid and consistent with the expected format.
+- Saves time by automating schema creation for structured data validation

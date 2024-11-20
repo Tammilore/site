@@ -1,0 +1,119 @@
+---
+title: "How I Would Build a Version of Plaid Layer For Nigeria"
+slug: "if-i-had-to-build-plaid-layer-for-nigeria"
+summary: "My thoughts on how I would build a version of Plaid Layer in Nigeria"
+ 
+time:
+  created: "2024-10-02T14:11:11.816Z"
+ 
+seo:
+  title: "How I Would Build a Version of Plaid Layer For Nigeria"
+  description: "My thoughts on how I would build a version of Plaid Layer in Nigeria."
+ 
+audience:
+  views: 46
+---
+
+Plaid is one of the companies that I find fascinating and since they launched their Layer product, I’ve been in my head about how I could build that. Not as a startup or anything like that but more like what would it take if I had to build this kind of product and if I had to build it now.
+
+This article isn’t a build article—that may or may not come later—but rather an exploration of my thought process and how I’d probably approach this.
+
+### So, what is Plaid Layer?
+
+Layer helps satisfy KYC requirements, link bank accounts, and onboard tens of millions of people who have saved their information with Plaid—just by collecting a phone number.
+
+![PhoneInput.png](https://substackcdn.com/image/fetch/f_auto,q_auto:good,fl_progressive:steep/https%3A%2F%2Fsubstack-post-media.s3.amazonaws.com%2Fpublic%2Fimages%2F37f2e1be-dbb1-4f3d-8bcd-16bed2cbcf48_995x752.jpeg)
+
+It works kind of like OAuth login, but in this case, it securely shares verified financial information from the Plaid network to the third-party financial application.
+
+![Signup.png](https://substackcdn.com/image/fetch/f_auto,q_auto:good,fl_progressive:steep/https%3A%2F%2Fsubstack-post-media.s3.amazonaws.com%2Fpublic%2Fimages%2F1e75b879-d2f8-4481-a856-a10bd1b980de_1027x743.jpeg)
+
+Instead of users manually entering their details and going through the usual onboarding process, they can choose what KYC information they want to share. Plaid then sends this information across, allowing users to be instantly onboarded.
+
+![Consent.png](https://substackcdn.com/image/fetch/f_auto,q_auto:good,fl_progressive:steep/https%3A%2F%2Fsubstack-post-media.s3.amazonaws.com%2Fpublic%2Fimages%2F03b824e9-c1f0-4956-8821-ee96e3b6748d_1600x1186.webp)
+
+The core of this product is the Plaid network, built up of the millions of people who have opted to be remembered by Plaid. This happens every time a user links their bank account via a fintech app. Plaid retains the user’s information, including all the bank accounts they’ve connected and any other relevant details, making it easy to pull up their information in the future with something as simple as a phone number.
+
+When a user enters their phone number on a product using Layer, Plaid can check that number in their network and, with the user’s permission, share their data with a third party.
+
+If you’re following along and thinking, “So you need a network,” you’re right. So how do I get that?
+
+### My First Thought: Build My Own
+
+Building a new network would take considerable time and could end up being quite expensive. I say “could” because if I happened to launch an insane viral consumer app that required at least two levels of KYC and attracted half a million users right off the bat, that would be fantastic. But if not, well, you know how that goes.
+
+The best consumer app idea I could think of as a gateway to building a network was a personal finance management (PFM) app, which led me to my next thought.
+
+### My Second Thought: Jump on a Nigerian Plaid
+
+I realized that if I were building a PFM app right now, I would probably use an open banking service in Nigeria. So maybe I could just jump on one of those instead.
+
+These services would already have some sort of network established, and there would be knowledge about who they are and how they access and share a user’s data. If you’ve ever connected your account, it might take some automation and reverse engineering, but it could be done.
+
+However, it wouldn’t make sense to build this type of product off a platform that could do the same in probably less time. Plus, I figured I could go beyond that to a more direct source anyway.
+
+### A Direct Piggyback
+
+What does that even mean?
+
+Well, it means I would choose a well-known fintech with a few million customers and a reputation for strict KYC processes.
+
+Let’s assume the name of such a bank is ABC Bank.
+
+I would piggyback off their network by building an OAuth around their application. Just like Plaid, when users want to sign up for a new platform, they would do so with ABC Bank the same way they would sign up with Google or Apple.
+
+Now, in reality, I would need to form a partnership and request official APIs, but this is me thinking out loud about unconventional ideas to get my desired outcome, so allow.
+
+### The Business Angle
+
+### B2B
+
+A product like this would be B2B because the value lies in selling the service to other businesses—specifically fintech startups that want to verify and onboard their users quickly.
+
+While this article is primarily for how I would approach building, it wouldn’t feel right not to include a list of reasons why this could work and why it might not. Let’s start with why it might not.
+
+### Trust Issues
+
+Users might feel uneasy about their financial info being used across multiple apps. They may not trust that their information is only being used for onboarding. The best way to address this is by being as transparent as possible about the process and ensuring people know exactly what data is being accessed.
+
+### Fraud
+
+If a scammer gains access to a user’s ABC Bank account, they could use that to create accounts on multiple platforms, leading to identity theft and other serious issues. The way around this is for the OAuth platform to implement strong security measures—like MFA (multi-factor authentication)—so only the account holder can use their details to create new accounts.
+
+### Who Gets the Blame for KYC Failures?
+
+This is where things get complicated. Let’s say the OAuth provider has someone slip through the cracks, and that user isn’t properly verified. If they then use that account to sign up for another platform, when things go wrong, who’s responsible? The OAuth fintech that botched the KYC or the new platform that trusted it?
+
+I think there should be shared responsibility. If platform Y onboards a fraudulent person via ABC Bank, they should be responsible for addressing that issue on their end.
+
+On one hand, I believe platform Y and similar platforms should probably conduct additional verification to ensure they aren’t onboarding the wrong users, but part of the whole point is that they wouldn’t need to do KYC from scratch. However, given the level of fraud fintechs are facing, maybe some extra measures should be taken.
+
+A useful feature could come out from this though: a shared fraud list. If platform Y discovers they’ve onboarded a fraudulent user, they can trigger an alert, send that information to a central database, and share it with ABC Bank and anyone else with access to the list. So platforms can check that new users aren’t on that list.
+
+### Will Fintechs Play Along?
+
+I’m not so sure fintechs would want to be used officially as an OAuth provider for their competition.
+
+Now, to Why It Could Be Great.
+
+### Easier Signup
+
+Faster onboarding for users could mean fewer people abandoning the process, leading to better conversion rates.
+
+### Increased Security
+
+The selected OAuth platform would have robust security measures, like multi-factor authentication (MFA) and biometric login. By using them, a platform can leverage that higher level of security, reducing the chances of unauthorized access or fraud.
+
+### Reduced KYC Costs
+
+It reduces the burden of managing an entire KYC process. Businesses can focus on other aspects while relying on already established systems for some regulatory compliance.
+
+### Additional Things to Note
+
+In an ideal situation for this product, it’s crucial to establish proper data-sharing agreements between the fintech using OAuth and the provider, ensuring both parties understand their responsibilities regarding user data and KYC processes. This also involves strict compliance with Nigerian data protection laws, such as the NDPR (Nigeria Data Protection Regulation), to safeguard users’ personal information and avoid legal complications. Additionally, the OAuth system should follow the open banking framework, promoting secure and seamless connectivity between financial institutions. By adhering to these standards, the product can ensure transparency, accountability, and regulatory compliance, while enhancing trust and security for users.
+
+### B2C - Porting Your KYC
+
+While the B2B angle is clear, what if we flipped the script and introduced a direct consumer solution? Imagine a service that allows users to seamlessly transfer their KYC information from one platform to another, letting them sign up and onboard with just one click.
+
+I might explore that angle in the next part.

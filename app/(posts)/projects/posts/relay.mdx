@@ -1,0 +1,89 @@
+---
+title: "Relay"
+slug: "relay"
+tags: ["Chrome Extension", "Open-source"]
+summary: "An open-source HTTP interceptor in your browser"
+ 
+time:
+  created: "2024-09-30T14:11:11.816Z"
+  updated: "2024-10-03T20:13:13.811Z"
+ 
+seo:
+  title: "Relay - Open-source HTTP Interceptor in your Browser"
+  description: "An open-source HTTP interceptor to capture, modify and run requests inside th browser."
+  keywords: ["Chrome Extension", "HTTP Interceptor", "Open-source"]
+ 
+audience:
+  views: 23
+
+project:
+  type: Chrome Extension
+  status: Active
+---
+
+<Image src='/images/relay-screenshot.png' alt='' caption=''/>
+
+# Quick Links
+- [Website](https://tryrelay.co)
+- [GitHub](https://github.com/tryrelay/relay)
+- [Add to Chrome](https://chromewebstore.google.com/detail/relay-%E2%80%93-intercept-modify/kilmhgoembjiamcmcbecekdonljjiolg)
+
+# Tech Stack
+`Typescript`, `Nextjs`, `Tailwind CSS`, `Plasmo Framework`
+
+# Key Features
+
+- **Capture Requests**: Automatically capture HTTP/HTTPS API requests from your browser.
+- **Edit & Replay**: Modify captured requests and replay them with one click.
+- **Save Sessions**: Keep a history of your sessions for easier access and analysis.
+- **Real-time Editing**: Adjust headers, parameters, and body content directly.
+- **Run Requests**: Execute API requests within the browser and get instant feedback.
+- **No Postman Required**: No need for external applications, just run everything in the extension.
+
+# Featured Snippets
+
+
+## Capturing Requests
+
+Relay makes it simple to monitor and store network activity in real time. By using Chrome's Debugger API, it tracks every request and response within a browser tab, helping developers debug faster and better.
+
+Here’s how it works:
+
+- Capture Requests: It records key details like the request URL, HTTP method, headers, query parameters, and payload.
+- Store Responses: When a response is received, it adds extra information like status codes, headers, and how long the request took.
+- Filter What You Need: You can focus on specific requests by filtering for certain methods or URLs.
+- Keep a History: All the data is saved using `@plasmohq/storage`, so you can revisit it even after closing or refreshing.
+
+```ts 
+// Capture and store network requests
+chrome.debugger.onEvent.addListener((source, eventMethod, params: any) => {
+  if (eventMethod === "Network.requestWillBeSent" && params.requestId) {
+    requests[params.requestId] = {
+      url: params.request.url,
+      method: params.request.method,
+      startTime: performance.now(),
+    };
+  }
+
+  if (eventMethod === "Network.responseReceived" && params.requestId) {
+    const request = requests[params.requestId];
+    if (request) {
+      const duration = `${Math.round(performance.now() - request.startTime)}ms`;
+      request.duration = duration;
+
+      // Store request in storage
+      storage.get("apiRequests").then((stored) => {
+        storage.set("apiRequests", [...(stored || []), request]);
+        console.log("Saved request:", request);
+      });
+    }
+  }
+})
+```
+### Why It’s Useful
+
+Debugging network issues can be time-consuming. Relay helps by:
+
+- Showing all the request and response details in one place.
+- Highlighting how long requests take to spot slow APIs.
+- Saving everything for later reference.

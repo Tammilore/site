@@ -1,0 +1,67 @@
+---
+title: "Liber - A Better Way to Read"
+slug: "a-better-way-to-read-liber"
+summary: "Your very own personal audiobook"
+ 
+time:
+  created: "2024-03-11T14:11:11.816Z"
+ 
+seo:
+  title: "Liber - A better way to read"
+  description: "Your very own personal audiobook"
+ 
+audience:
+  views: 163
+---
+
+![Cover.png](/blog/liber/cover.png)
+
+I spent the last two weeks working on and off on **Liber**. It’s my first project where I combine no-code and code and safe to say it wasn't bad. Think of Liber as a personal audiobook assistant that makes your reading experience more convenient and enjoyable. Of course this is subjective because people like to read in different ways.
+
+## The problem and the fix
+
+I built Liber for my partner and people like him who love to immerse themselves in written content but find it more convenient to listen. Reading is fun, but it's not exactly flexible and using your eyes requires your full attention.
+
+Liber offers a convenient solution for consuming content through audio. Whether you're commuting, exercising, or simply relaxing, you can absorb knowledge effortlessly, freeing up your hands and eyes for other tasks.
+
+## How it works
+
+![How it works.png](/blog/liber/how-it-works.png)
+
+Using Liber is simple. First, create an account and add your OpenAI key. Next, add content to your library with a link. You can view all your added articles on the home page. Click on any to listen on the Player or your can choose dual mode where you’re able to listen and read at the same time. You can also bookmark your favorites.
+
+Right now, Liber only works with short articles mainly because I’m using OpenAI for TTS and there’s a limit of 4096 characters. There’ll be options to use different models like Eleven Labs or models from Replicate in a later version.
+
+## Tech stack
+
+I chose to develop Liber as a PWA because it makes it super easy to use, no need to download from a play store. Plus it makes it seamless for me to build and update. Here are the tools I used:
+
+### **Frontend**
+
+- **Adalo**: Most of the app’s frontend development was done with Adalo. Adalo is a no-code platform that allows you quickly design and deploy mobile apps. This allowed me quickly set things up without getting bogged down by complex code. If you’re curious about the UI design, I got a free kit and moved some stuff around in Figma.
+
+![Adalo Screens](/blog/liber/adalo-screens.png)
+
+- **React Native**: I needed to introduce some custom functionalities not directly available through Adalo, so I built some custom components with React Native. The first component is a simple button where I attached all the logic of extracting details of the articles and converting them to audio. The second is a markdown renderer I used to represent what the article looks like inside the app. [Here’s](https://github.com/Tammilore/adalo-markdown-renderer) the source code if you’re ever interested in making components for the Adalo marketplace.
+
+### **Backend**
+
+- **Server Logic with Express.js**: The backend infrastructure is powered by Express.js running on Node.js. It handles fetching details like the main content, image, word count and a couple of other stuff.
+- **Hosting with Vercel**: AWS seemed like overkill for one API endpoint so I decided to try Vercel for deploying and hosting the backend.
+
+## Try it out
+
+I have a few tests before you’re able to create individual accounts but you can try it out with this [demo app](https://liber.adalo.com/demo) for as long as you want or until my OpenAI credits run out 🥲. You can use it on your mobile browser or add to your home screen, whichever you like.
+
+## Roadmap
+
+- [x] Add articles by saving the link
+- [x] Listen to the audio
+- [x] Dual mode - Listen and read at the same time
+- [x] Bookmark your favorites
+- [x] Use your own TTS AI model API Key
+- [ ] Longer form articles
+- [ ] Choose voice option
+- [ ] Share audio and article
+- [ ] Other TTS models
+- [ ] Add to audible

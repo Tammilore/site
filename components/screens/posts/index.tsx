@@ -16,7 +16,7 @@ interface Props {
 
 export const Layout = ({ post, route }: Props) => {
   const posts = getPosts(route);
-
+  
   const Seperator = () => {
     return <div>⋅</div>;
   };
@@ -24,12 +24,16 @@ export const Layout = ({ post, route }: Props) => {
   const PublishedTime = () => {
     return <div>Published {formatter.date(new Date(post.time.created))}</div>;
   };
-  const UpdateTime = () => {
-    return <div>Updated {formatter.date(new Date(post.time.updated))}</div>;
-  };
+  // const UpdateTime = () => {
+  //   return <div>Updated {formatter.date(new Date(post.time.updated))}</div>;
+  // };
 
   const ReadingTime = () => {
     return <div>{readingTime(post.content).minutes} minutes read</div>;
+  };
+
+  const AudienceViews = () => {
+    return <div>{post.audience?.views} views</div>;
   };
 
   return (
@@ -41,9 +45,12 @@ export const Layout = ({ post, route }: Props) => {
         <div className="mt-1 flex gap-2 text-muted text-small">
           <PublishedTime />
           <Seperator />
-          <UpdateTime />
-          <Seperator />
           <ReadingTime />
+          <Seperator />
+          <AudienceViews />
+        </div>
+        <div>
+          <h2 className="mt-2 text-small text-muted">{post.summary}</h2>
         </div>
       </div>
 
