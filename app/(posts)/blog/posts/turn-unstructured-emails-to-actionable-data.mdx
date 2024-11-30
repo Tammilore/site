@@ -1,0 +1,571 @@
+---
+title: "Turn Unstructured Emails to Actionable Data"
+slug: "how-to-turn-unstructured-emails-to-actionable-data"
+summary: "Extract structured data from PDFs attached to emails and turn them into actionable data."
+
+ 
+time:
+  created: "2024-11-29T11:29:11.816Z"
+ 
+seo:
+  title: "Turn unstructured emails to actionable data"
+  description: "Extract structured data from PDFs attached to emails and turn them into actionable data."
+  keywords: ["Emails", "AI data extraction"]
+
+audience:
+  views: 2
+ 
+---
+
+This is the first of my last two builds for the year, and unlike my previous projects where I used no-code tools, these will be fully coded.
+
+## What Are We Building?
+
+In this build, we’re building a tool designed for the logistics industry. This tool will automate the extraction of structured data from PDF attachments (such as requests for quotes or shipping information sheets) in emails, allowing this data to be used elsewhere in the workflow.
+
+To make things easier to understand, let’s use Nova Logistics as an example—a fictional company specializing in transporting fragile electronics across various cities.
+
+At Nova Logistics, customers reach out by email to request quotes for shipping items between cities and they usually attach a PDF that contains all the necessary shipping details. Currently, the process is manual: someone at Nova has to open each email, download the attached PDF, read through it, and extract key information like the item names and quantities before calculating the shipping cost.
+
+This can take hours, especially when there are multiple emails per day, each with lengthy PDF documents.
+
+In this article, we’ll walk through building a tool to **automate** this entire process—from fetching the emails and extracting the PDF data to sending the extracted information to Google Sheets.
+
+## How It Works
+
+1. **Poll Emails**: First, we’ll set up a system to regularly check for new emails from the inbox. Once an email is found, we’ll download the PDF attachment and apply a label to the email so it isn’t polled again in the future.
+2. **Extract Data with Documind**: We’ll pass the PDF as a URL to [**Documind**](https://documind.xyz), an open-source package that uses AI to extract structured data from documents. This will give us information like the item names, quantities, shipping details, weight, and more.
+3. **Store and Use the Data**: Finally, we’ll send the extracted data to **Google Sheets**, making it easy to view, track, and use for further calculations.
+
+## What We’ll Need
+
+To build this tool, we’ll need the following packages:
+
+- **Gmail API**: To fetch emails from the inbox.
+- **Supabase**: To upload and store the PDFs.
+- [**Documind**](https://documind.xyz): To extract structured data from the PDFs.
+- **Google Sheets API**: To store the extracted data and calculate quotes.
+- **Nango**: To manage user authentication
+
+## **Step 1: Initial set up**
+
+Before we start writing the code, we need to set up a few things. Don’t worry; I’ll guide you through each step.
+
+### **1.1 Install Node.js**
+
+We’ll be using **Node.js** to run our code. If you don’t have Node.js installed, go to the [Node.js website](https://nodejs.org/) and download the latest version.
+
+### **1.2 Install Required Libraries**
+
+Once Node.js is installed, we need to install the packages that will help us interact with Gmail, Google Sheets, Supabase, and Documind.
+
+1. Open a **terminal** or **command prompt**.
+2. Create a new folder for your project by running:
+    
+    ```bash
+    mkdir nova
+    cd nova
+    ```
+    
+3. Initialize the project:
+    
+    ```bash
+    npm init -y
+    ```
+    
+4. Install the required packages:
+    
+    ```bash
+    
+    npm install googleapis @supabase/supabase-js documind dotenv @nangohq/node
+    ```
+### **1.3 Get API Credentials**
+
+Before we can start writing the code, you need to set up and get all the credentials to use the Google APIs (Gmail and Google Sheets), Supabase and Documind. Here’s a quick guide for each:
+
+**Google APIs**
+
+1. Go to the [Google Cloud Console](https://console.cloud.google.com/).
+2. From the projects list, select a project or create a new one
+3. Enable Gmail API and Google Sheets API for your project:
+    - Go to the [API Library](https://console.cloud.google.com/apis/library) in the Cloud Console and search for "Gmail API" and "Google Sheets API". Click on each and enable them.
+4. Configure your consent screen:
+    - Go to APIs & Services > OAuth consent screen.
+    - Give your app a name.
+    - Choose “External” as your audience type.
+    - Fill out any other required fields.
+5. Create OAuth 2.0 credentials:
+    - Go to APIs & Services > Credentials.
+    - Click on Create Credentials and choose OAuth Client ID.
+    - Choose “Web application” as the application type.
+    - Copy your Client ID and Secret.
+6. To easily manage user OAuth across multiple platforms, I use [Nango](https://www.nango.dev/). You can check out their [documentation](https://docs.nango.dev/guides/getting-started/configure-an-integration) on how to get started:
+    - Log in to Nango and click on Configure New Integration.
+    - Search for Google Mail in the list of integrations.
+    - Add the Client ID and Secret you copied.
+    - In the field for scopes, add `https://www.googleapis.com/auth/gmail.readonly` , `https://www.googleapis.com/auth/gmail.modify` and `https://www.googleapis.com/auth/gmail.labels`
+    - Copy the callback URL for the integration and save.
+    - Go back to Credentials on your Google console and add the callback URL as an authorized redirect URI.
+
+Since we’re also using Google Sheets API, you can simply go through step 6 to create another integration on Nango. Search for the Google Sheets integration and use the same Client ID and Secret you copied. In the space for scopes, add `https://www.googleapis.com/auth/spreadsheets`
+
+To publish your app, go to the OAuth consent screen in the Google console and click on the Publish button. 
+
+**Supabase** 
+
+1. Sign up for a free account at [Supabase](https://supabase.io/).
+2. Create a new **project** and **bucket** for storing PDFs.
+3. Get the **API URL** and **API Key** from your project settings.
+
+## **Step 2: Write the code**
+
+Now let’s write the code in small steps.
+
+### **2.1 Add environment variables**
+
+Create a `.env` file to store all important variables that would be used through out the code. Here’s an example:
+
+```
+SUPABASE_API_KEY=<Supabase API Key>
+SUPABASE_URL=<Supabase URL>
+OPENAI_API_KEY=<Open AI API Key>
+NANGO_KEY=<Nango secret key>
+```
+
+We’ll walk through how to get and use these variables further in the code.
+
+### **2.2 Set up Gmail API and fetch emails**
+
+We’ll begin by using the **Gmail API** to fetch emails that don’t have the `Processed` label and contain attachments. 
+
+To retrieve the necessary access token, we’ll use **Nango**, which will automatically handle token refreshes if they expire, so you won’t need to worry about managing token lifecycles yourself.
+
+All you need are:
+
+1. The **Integration ID** from the Gmail setup in Nango.
+2. The **Connection ID** for the user whose access token is needed.
+3. Your **Nango secret key**.
+
+You can easily add a new connection directly through the Nango UI using your own Gmail account. Your secret key can be found in the environment settings section of the Nango dashboard.
+
+```jsx
+//gmail.js
+import { google } from 'googleapis';
+import 'dotenv/config';
+import fs from 'fs';
+import path from 'path';
+import { Nango } from '@nangohq/node';
+
+// Create a Nango client with your secret key
+const nango = new Nango({ secretKey: process.env.NANGO_KEY });
+
+// Fetch the access token for gmail
+const user = await nango.getConnection('google-mail', '61a09e6b-b...');
+
+// Create a simple OAuth2 client with just the access token
+function createGmailClient() {
+    const oauth2Client = new google.auth.OAuth2();
+    oauth2Client.setCredentials({
+        access_token: user.credentials.access_token
+    });
+
+    return google.gmail({ version: 'v1', auth: oauth2Client });
+}
+
+//Create/get the processed label
+async function addProcessedLabel(gmail) {
+    try {
+        // First, check if the label exists
+        const labelsResponse = await gmail.users.labels.list({ userId: 'me' });
+        const existingLabels = labelsResponse.data.labels;
+        
+        let processedLabel = existingLabels.find(label => label.name === 'Processed');
+        
+        // If processed label doesn't exist, create it
+        if (!processedLabel) {
+            const createLabelResponse = await gmail.users.labels.create({
+                userId: 'me',
+                requestBody: {
+                    name: 'Processed',
+                    labelListVisibility: 'labelShow',
+                    messageListVisibility: 'show'
+                }
+            });
+            processedLabel = createLabelResponse.data;
+        }
+
+        return processedLabel.id;
+    } catch (error) {
+        console.error('Error creating/finding processed label:', error);
+        throw error;
+    }
+}
+
+// Fetch all unprocessed emails with attachments
+export async function fetchUnprocessedEmailsWithAttachments() {
+    try {
+        const gmail = createGmailClient();
+
+        // List all unprocessed emails with attachments
+        const listResponse = await gmail.users.messages.list({
+            userId: 'me',
+            labelIds: ['INBOX'],
+            q: 'has:attachment -label:processed',
+            maxResults: 5
+        });
+
+        const messages = listResponse.data.messages;
+        if (!messages || messages.length === 0) {
+            console.log('No unprocessed emails with attachments found.');
+            return [];
+        }
+
+        // Get or create the label
+        const processedLabelId = await addProcessedLabel(gmail);
+
+        // Fetch details for each email
+        const emailsWithAttachments = [];
+
+        for (const message of messages) {
+            // Get the full details of the email
+            const messageResponse = await gmail.users.messages.get({
+                userId: 'me',
+                id: message.id,
+                format: 'full'
+            });
+
+            const emailMessage = messageResponse.data;
+
+            // Extract sender information
+            let senderEmail = '';
+            let senderName = '';
+            const headers = emailMessage.payload.headers;
+            const fromHeader = headers.find(header => header.name === 'From');
+            if (fromHeader) {
+                const fromParts = fromHeader.value.match(/^(.*?)\s*<(.+?)>$/);
+                if (fromParts) {
+                    senderName = fromParts[1].trim().replace(/^"|"$/g, '');
+                    senderEmail = fromParts[2];
+                } else {
+                    senderEmail = fromHeader.value;
+                }
+            }
+
+            const attachments = [];
+
+            // Extract attachments
+            const parts = emailMessage.payload.parts || [];
+
+            for (const part of parts) {
+                // Only process PDF attachments
+                if (part.filename && 
+                    part.filename.toLowerCase().endsWith('.pdf') && 
+                    part.body.attachmentId) {
+                    
+                    // Download the attachment
+                    const attachmentResponse = await gmail.users.messages.attachments.get({
+                        userId: 'me',
+                        messageId: message.id,
+                        id: part.body.attachmentId
+                    });
+
+                    const attachmentData = attachmentResponse.data;
+                    
+                    // Decode base64 attachment
+                    const buffer = Buffer.from(attachmentData.data, 'base64');
+
+                    // Save attachment to a file 
+                    const filename = part.filename;
+                    const filepath = path.join(process.cwd(), 'downloads', filename);
+                    
+                    // Ensure downloads directory exists
+                    fs.mkdirSync(path.join(process.cwd(), 'downloads'), { recursive: true });
+                    
+                    fs.writeFileSync(filepath, buffer);
+
+                    attachments.push({
+                        filename: filename,
+                        filepath: filepath,
+                        buffer: buffer
+                    });
+
+                    // Break after first pdf attachment
+                    break;
+                }
+            }
+
+            // Only add if PDF attachment found
+            if (attachments.length > 0) {
+                // Modify the message labels to mark as processed
+                await gmail.users.messages.modify({
+                    userId: 'me',
+                    id: message.id,
+                    requestBody: {
+                        addLabelIds: [processedLabelId],
+                    }
+                });
+
+                emailsWithAttachments.push({
+                    messageId: message.id,
+                    senderEmail,
+                    senderName,
+                    attachments: attachments
+                });
+            }
+        }
+
+        return emailsWithAttachments;
+
+    } catch (error) {
+        console.error('Failed to fetch emails:', error);
+        return [];
+    }
+}
+```
+
+For simplicity, we’ll limit the results to just five emails at a time, and we’ll specifically filter to only fetch emails that have PDF attachments. From those, we’ll retrieve just the first attachment for processing. After downloading the attachment, we’ll mark the email as processed by applying a label, ensuring that it won't be fetched again in future polling cycles.
+
+### **2.2 Upload to Supabase**
+
+Next, we need upload the downloaded PDFs to Supabase. Make sure you replace the bucket name in the code with yours.
+
+```jsx
+//supabase.js
+import { createClient } from '@supabase/supabase-js';
+import 'dotenv/config';
+
+const supabase = createClient(
+    process.env.SUPABASE_URL, 
+    process.env.SUPABASE_API_KEY
+);
+
+export async function uploadPDFToSupabase(attachment) {
+    try {
+        // Generate a unique filename
+        const uniqueFilename = `${Date.now()}_${attachment.filename}`;
+
+        // Upload the file
+        const { data: uploadData, error: uploadError } = await supabase.storage
+            .from('pdfAttachments')
+            .upload(uniqueFilename, attachment.buffer, {
+                contentType: 'application/pdf'
+            });
+
+        if (uploadError) throw uploadError;
+
+        // Create a signed URL that expires in 1 hour (3600 seconds)
+        const { data: { signedUrl }, error: signedUrlError } = await supabase.storage
+            .from('pdfAttachments')
+            .createSignedUrl(uniqueFilename, 3600);
+
+        if (signedUrlError) throw signedUrlError;
+
+        return signedUrl;
+    } catch (error) {
+        console.error('Supabase upload error:', error);
+        throw error;
+    }
+}
+```
+
+### **2.3 Extract data using Documind**
+
+Once the PDF is stored in Supabase, we’ll use Documind to extract the relevant data. Since it leverages OpenAI for processing, make sure your API Key is added to the `.env` file. 
+
+Documind works with schemas that you define to extract the structured data you need. We’ll go over schema definition shortly, but feel free to check the [documentation](https://docs.documind.xyz/guides/schema-definition) for more details.
+
+```jsx
+// extractor.js
+import { extract } from 'documind';
+
+export async function extractPDFData(pdfUrl, schema) {
+    try {
+        const result = await extract({
+            file: pdfUrl,
+            schema
+        });
+
+        return result;
+    } catch (error) {
+        console.error('Extraction error:', error);
+        throw error;
+    }
+}
+
+```
+
+### **2.4 Send the extracted data to Google Sheets**
+
+After extracting the data from the PDF, we’ll send it to Google Sheets.
+
+Before proceeding, ensure that your Google Sheets is set up and you’ve created a connection with your account through Nango. If you haven’t already, here’s a [template](https://docs.google.com/spreadsheets/d/1csl5u-0yv6VgzxcrZ5VQvLof7QDJiSadvLlc7O3BieI/edit?usp=sharing) you can use to get started.
+
+```jsx
+//sheets.js
+import { google } from 'googleapis';
+import { Nango } from '@nangohq/node';
+
+// Create a Nango client with your secret key
+const nango = new Nango({ secretKey: process.env.NANGO_KEY });
+
+// Fetch the access token for google sheets
+const user = await nango.getConnection('google-sheet', '98acac6f-8a1...');
+
+// Google Sheets client setup
+export async function sendToGoogleSheets(data) {
+    const oauth2Client = new google.auth.OAuth2();
+    oauth2Client.setCredentials({
+        access_token: user.credentials.access_token
+    });
+
+    const sheets = google.sheets({ version: 'v4', auth: oauth2Client });
+
+    // Flatten the data and prepare it for insertion into Google Sheets
+    const rows = [];
+
+    data.forEach((entry) => {
+        entry.Items.forEach((item) => {
+            // Prepare a row of data for each item in the Items array
+            const row = [
+                item.purchaseNo,   // Purchase number
+                entry.senderName,  // Sender's name
+                entry.senderEmail, // Sender's email
+                item.pickupLocation, // Pickup location
+                item.destinationLocation, // Destination location
+                item.itemName,     // Item name
+                item.weight,       // Weight
+                item.quantity,     // Quantity
+                item.shippingDate  // Shipping date
+            ];
+            rows.push(row); // Add the row to the array
+        });
+    });
+
+    const request = {
+        spreadsheetId: '1Y5iFpPhe938....', // Replace with your Google Sheets ID
+        range: 'Sheet1!A2',  // The range in the sheet where the data should start (automatically appends)
+        valueInputOption: 'RAW',  // Insert raw values (no formatting)
+        resource: {
+            values: rows,  // Insert the rows we prepared earlier
+        },
+    };
+
+    try {
+        const response = await sheets.spreadsheets.values.append(request);
+        console.log('Data sent to Google Sheets:', response.data);
+    } catch (error) {
+        console.error('Error sending data to Google Sheets:', error);
+    }
+}
+```
+
+## **Step 3: Putting everything together**
+
+Now that we’ve written the individual functions, we need to bring everything together.
+
+In this step, we’ll define the schema that Documind will use to extract the required data. This schema will guide the AI in identifying and structuring the relevant information from the PDFs.
+
+```jsx
+// main.js
+import { fetchUnprocessedEmailsWithAttachments } from './gmail.js';
+import { uploadPDFToSupabase } from './supabase.js';
+import { extractPDFData } from './extractor.js';
+import { sendToGoogleSheets } from './sheets.js';
+
+//Documind Schema
+const schema = [
+    {
+        "name": "Items",
+        "type": "array",
+        "description": "List of items to be shipped",
+        "children": [
+        {
+         "name": "purchaseNo",
+         "type": "string",
+         "description": "Purchase or order number for the item."
+        },
+        {
+         "name": "itemName",
+         "type": "string",
+         "description": "Name of the item being shipped."
+        },
+        {
+          "name": "pickupLocation",
+          "type": "string",
+          "description": "City where the shippment will be picked up."
+        },
+        {
+          "name": "destinationLocation",
+          "type": "string",
+          "description": "City where the item will be shipped to."
+        },
+        {
+          "name": "weight",
+          "type": "number",
+          "description": "Weight of the item"
+        },
+        {
+          "name": "quantity",
+          "type": "number",
+          "description": "Quantity of the item"
+        },
+        {
+          "name": "shippingDate",
+          "type": "string",
+          "description": "Date the item will be shipped written in format DD/MM/YYYY"
+        }
+        ]
+    }
+]
+
+async function processEmails() {
+    try {
+        // Fetch unprocessed emails with PDF attachments
+        const emails = await fetchUnprocessedEmailsWithAttachments();
+
+        const processedResults = [];
+
+        // Process each email
+        for (const email of emails) {
+            for (const attachment of email.attachments) {
+                try {
+                    // Upload to Supabase
+                    const signedUrl = await uploadPDFToSupabase(attachment);
+
+                    // Extract data
+                    const extractionResult = await extractPDFData(signedUrl, schema);
+
+                    // Append sender information
+                    const finalResult = {
+                        ...extractionResult.data,
+                        senderName: email.senderName,
+                        senderEmail: email.senderEmail
+                    };
+
+                    processedResults.push(finalResult);
+
+                    // Send the data to Google Sheets
+                    await sendToGoogleSheets(finalResult);
+                } catch (error) {
+                    console.error('Error processing email attachment:', error);
+                }
+            }
+        }
+
+        return processedResults;
+    } catch (error) {
+        console.error('Error in email processing:', error);
+        return [];
+    }
+}
+
+// Set up a polling interval (every minute)
+setInterval(async () => {
+   const results = await processEmails();
+   console.log('Processed Results:', JSON.stringify(results, null, 2));
+   }, 60000); // Poll every 60,000ms (1 minute)
+```
+
+### **Test the Code**
+
+The full source code is available on [**GitHub**](https://github.com/DocumindHQ/examples), along with a sample PDF for testing. However, you’re welcome to create and use your own documents as well. Simply clone the repository, modify the code to fit your requirements, and try it out for your own use case.

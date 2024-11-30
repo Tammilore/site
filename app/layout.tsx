@@ -3,6 +3,7 @@ import "@/styles/main.css";
 import type { Metadata } from "next";
 
 import { Providers } from "@/components/providers";
+import { Analytics } from "@vercel/analytics/react"
 import { OpenGraph } from "@/lib/og";
 
 import clsx from "clsx";
@@ -28,6 +29,7 @@ export default function RootLayout({
         <Providers>
           <main className="mx-auto max-w-screen-sm overflow-x-hidden px-6 py-24 md:overflow-x-visible ">
             <article className="article">{children}</article>
+            <Analytics />
           </main>
         </Providers>
       </body>
