@@ -1,5 +1,6 @@
 import type { Post } from "@/types/post";
 import type { Work } from "@/types/work";
+import type { Thought } from "@/types/thought";
 
 import fs from "fs";
 import path from "path";
@@ -41,4 +42,9 @@ export function getPosts(directory: string): Post[] {
 export function getWork(directory: string): Post[] {
   const files = getFiles(path.join(process.cwd(), "app", "(posts)", directory, "posts"));
   return files.map((file) => readFile(path.join(process.cwd(), "app", "(posts)", directory, "posts", file))).filter((work): work is Work => work !== null);
+}
+
+export function getThought(directory: string): Post[] {
+  const files = getFiles(path.join(process.cwd(), "app", "(posts)", directory, "posts"));
+  return files.map((file) => readFile(path.join(process.cwd(), "app", "(posts)", directory, "posts", file))).filter((thought): thought is Thought => thought !== null);
 }

@@ -3,7 +3,7 @@ import { AppThemeSwitcher } from "@/components/theme";
 
 const Footer = () => {
   return (
-    <div className="flex w-full items-center justify-between border-border border-t pt-2">
+    <div className="flex w-full items-center justify-between pt-2">
       <div className="px-[2px] text-muted text-small flex space-x-3">
         <Link href="https://x.com/blacqee_" text="Twitter" underline />
         <Link href="https://github.com/Tammilore" text="Github" underline />
@@ -18,3 +18,5 @@ const Footer = () => {
 };
 
 export { Footer };
+
+{/* <div className="flex w-full items-center justify-between border-border border-t pt-2"></div> */}

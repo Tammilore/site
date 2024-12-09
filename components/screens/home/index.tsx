@@ -1,5 +1,7 @@
 //import { DeployButton } from "@/components/deploy";
 import { Footer } from "@/components/footer";
+import { Label } from '@/components/ui/label';
+import { MailingList } from "@/components/mailing";
 import * as FadeIn from "@/components/motion/staggers/fade";
 import { Posts } from "@/components/posts";
 import { Work } from "@/components/work";
@@ -33,6 +35,12 @@ export default function Home() {
         <Posts category="blog" />
       </FadeIn.Item>
       <Spacer />
+      <FadeIn.Item>
+      <div className="space-y-1">
+      <Label >Get notified when I publish new posts</Label>
+      <MailingList />
+    </div>
+      </FadeIn.Item>
       <FadeIn.Item>
         <Footer />
       </FadeIn.Item>
