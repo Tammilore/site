@@ -1,0 +1,165 @@
+---
+title: "Kontra"
+slug: "kontra"
+tags: ["Open-source", "AI", "LLMs"]
+summary: "AI-powered contract analysis tool"
+ 
+time:
+  created: "2024-12-16T17:02:11.816Z"
+  updated: "2024-12-16T20:13:13.811Z"
+ 
+seo:
+  title: "Kontra - AI-powered contract analysis tool"
+  description: "An AI-powered contract analysis tool that detects risky clauses, highlights negotiation opportunities, and protects you from unfair legal agreements."
+  keywords: ["Open-source", "AI", "LLMs", "Document extraction"]
+ 
+audience:
+  views: 2
+
+project:
+  type: Web App
+  status: Active
+---
+
+<Image src='/images/kontra-screenshot.png' alt='' caption=''/>
+
+# Quick Links
+- [GitHub](https://github.com/Tammilore/ai-contract-analyzer)
+
+# Tech Stack
+`Typescript`, `Nextjs`, `Tailwind CSS`, `Supabase`, `Documind`
+
+# Key Features
+
+- **Risky Clause Detection**: Identifies clauses in contracts that may pose risks or need careful consideration.
+- **Negotiation Opportunities**: Highlights areas where you can negotiate better terms.
+- **Unfair Agreements Detection**: Detects unfair terms that you shouldn't agree to.
+
+# Featured Snippets
+
+
+## Analyzing Contracts
+Kontra takes in the uploaded file or pasted text to PDF and then analyzes it by extracting the specific clause, the level of risk and the suggsetion or details of what should be taken note of/avoided.
+
+Here’s how it works:
+
+- Converts to PDF : It converts the uploaded file or pasted text to PDF format.
+- Uploads the PDF on Supabase: It uploads the document to Supabase storage and returns the signed url.
+- Analyzes and extracts structured data: It passes the URL to Documind to analyze the contract and then extract structured data.
+- Outputs the analysis - It returns the analysis of ach clause, their risk level and highlights their position on the document.
+
+```ts 
+import { NextResponse } from "next/server";
+import { extract, formatter } from "documind";
+import { v4 as uuidv4 } from "uuid";
+
+interface Issue {
+  id: string;
+  type: string;
+  title: string;
+  description: string;
+}
+
+interface Section {
+  id: string;
+  type: string;
+  range: [number, number];
+}
+
+export const dynamic = "force-dynamic";
+
+export const POST = async (req: Request) => {
+  try {
+    const body = await req.json();
+    const fileUrl = body.fileUrl;
+
+    if (!fileUrl) {
+      return NextResponse.json({ error: "File URL is required" }, { status: 400 });
+    }
+
+    // Analyze the contract
+    const analyzedText = await extract({
+      file: fileUrl,
+      schema: [
+        {
+          "name": "contractSuggestions",
+          "type": "array",
+          "description": "An array of clause suggestions extracted from the contract document.",
+          "children": [
+            {
+              "name": "type",
+              "type": "string",
+              "description": "This field indicates the level of attention the clause requires. high suggests critical examination, medium is a caution, and low might offer a beneficial negotiation point or a general advantage."
+            },
+            {
+              "name": "title",
+              "type": "string",
+              "description": "A concise label for easy identification of the clause and its implications."
+            },
+            {
+              "name": "description",
+              "type": "string",
+              "description": "This field is for the contextual reasoning for the assigned type, detailing potential risks, disadvantages, or advantages and what should be done or avoided."
+            },
+            {
+              "name": "exactClause",
+              "type": "string",
+              "description": "This field is for the exact text of the clause, ensuring fidelity to the source document and accuracy in evaluation."
+            }
+          ]
+        }
+      ],
+    });
+
+    const suggestions = analyzedText?.data?.contractSuggestions || [];
+    if (!Array.isArray(suggestions) || suggestions.length === 0) {
+      return NextResponse.json({ error: "No contract suggestions found." }, { status: 400 });
+    }
+
+    // Extract plaintext from the file
+    const extractedText = await formatter.plaintext({ file: fileUrl });
+
+    // Initialize result with explicit types
+    const result: { issues: Issue[]; sections: Section[] } = {
+      issues: [],
+      sections: [],
+    };
+
+    for (const suggestion of suggestions) {
+      const id = uuidv4(); // Generate a unique ID
+      const type = suggestion.type.toLowerCase();
+
+      // Add to issues array
+      result.issues.push({
+        id,
+        type,
+        title: suggestion.title,
+        description: suggestion.description,
+      });
+
+      // Find the range for `exactClause`
+      const start = extractedText.indexOf(suggestion.exactClause);
+      const end = start + suggestion.exactClause.length;
+
+      if (start === -1 || end === -1) {
+        console.warn(`Could not find exactClause in extracted text: ${suggestion.exactClause}`);
+      }
+
+      // Add to sections array
+      result.sections.push({
+        id,
+        type,
+        range: [start, end],
+      });
+    }
+
+    return NextResponse.json({ result });
+  } catch (error) {
+    console.error("Error in API route:", error);
+    return NextResponse.json(
+      { error: error || "An unknown error occurred" },
+      { status: 500 }
+    );
+  }
+};
+```
