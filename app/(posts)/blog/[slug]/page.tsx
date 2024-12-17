@@ -24,7 +24,7 @@ export function generateMetadata({ params }: PageProps) {
   const post = Posts.find((post: { slug: string }) => post.slug === params.slug);
   const title = post ? post.title : "";
   const imagePath = post && post.media?.image ? post.media.image : `/api/og?title=${encodeURIComponent(title)}`;
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL?.endsWith('/') ? process.env.NEXT_PUBLIC_SITE_URL : `${process.env.NEXT_PUBLIC_SITE_URL}/`;
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL;  
   const image = new URL(imagePath, siteUrl).href;
 
   return {
