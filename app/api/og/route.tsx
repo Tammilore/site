@@ -55,7 +55,7 @@ export async function GET(request: Request) {
             gap: 12,
           }}
         >
-          <div style={{ color: "rgba(255, 255, 255, 0.92)" }}>next-sylph-portfolio</div>
+          <div style={{ color: "rgba(255, 255, 255, 0.92)" }}>tamilore</div>
           {title && <div style={{ color: "rgba(255, 255, 255, 0.39)" }}>/</div>}
           {title ? (
             <div style={{ color: "rgba(255, 255, 255, 0.39)" }}>{title.toLowerCase()}</div>

@@ -23,7 +23,8 @@ export async function generateStaticParams() {
 export function generateMetadata({ params }: PageProps) {
   const work = Works.find((work: { slug: string }) => work.slug === params.slug);
   const title = work ? work.title : "";
-  const image = `${process.env.NEXT_PUBLIC_SITE_URL}api/og?title=${encodeURIComponent(title)}`;
+  const imagePath = work && work.media?.image ? work.media.image : `/api/og?title=${encodeURIComponent(title)}`;
+  const image = `${process.env.NEXT_PUBLIC_SITE_URL}${imagePath}`;
 
   return {
     ...OpenGraph,
