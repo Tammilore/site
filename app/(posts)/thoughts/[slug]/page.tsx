@@ -23,8 +23,9 @@ export async function generateStaticParams() {
 export function generateMetadata({ params }: PageProps) {
   const thought = Thoughts.find((thought: { slug: string }) => thought.slug === params.slug);
   const title = thought ? thought.title : "";
-  const imagePath = thought && thought.media?.image ? thought.media.image : `/api/og?title=${encodeURIComponent(title)}`;
-  const image = `${process.env.NEXT_PUBLIC_SITE_URL}${imagePath}`;
+  const imagePath = thought && thought.media?.image ? thought.media.image : `api/og?title=${encodeURIComponent(title)}`;
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL?.endsWith('/') ? process.env.NEXT_PUBLIC_SITE_URL : `${process.env.NEXT_PUBLIC_SITE_URL}/`;
+  const image = `${siteUrl}${imagePath}`;
 
   return {
     ...OpenGraph,
