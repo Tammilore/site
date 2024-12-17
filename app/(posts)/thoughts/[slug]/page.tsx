@@ -23,6 +23,7 @@ export async function generateStaticParams() {
 export function generateMetadata({ params }: PageProps) {
   const thought = Thoughts.find((thought: { slug: string }) => thought.slug === params.slug);
   const title = thought ? thought.title : "";
+  const description = thought ? thought.summary : ""; 
   const imagePath = thought && thought.media?.image ? thought.media.image : `api/og?title=${encodeURIComponent(title)}`;
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL;  
   const image = new URL(imagePath, siteUrl).href;
@@ -30,8 +31,10 @@ export function generateMetadata({ params }: PageProps) {
   return {
     ...OpenGraph,
     title,
+    description,
     openGraph: {
       title,
+      description,
       images: [image],
     },
     twitter: {
